@@ -1,0 +1,98 @@
+
+
+#1 Calculate the average departure and arrival delay for all flights in the last 6 months.
+SELECT 
+    AVG(DEPARTURE_DELAY) AS avg_departure_delay, 
+    AVG(ARRIVAL_DELAY) AS avg_arrival_delay 
+FROM flights_cleaned
+WHERE YEAR = (SELECT MAX(YEAR) FROM flights_cleaned) 
+AND MONTH >= (SELECT MAX(MONTH) FROM flights_cleaned) - 5;
+
+#2 Identify the top 10 most popular flight routes based on the total number of flights.
+SELECT 
+    ORIGIN_AIRPORT, DESTINATION_AIRPORT, 
+    COUNT(*) AS total_flights 
+FROM flights_cleaned
+GROUP BY ORIGIN_AIRPORT, DESTINATION_AIRPORT
+ORDER BY total_flights DESC
+LIMIT 10;
+
+#3 Rank airlines by their on-time performance (lowest average delay).
+SELECT 
+    AIRLINE, 
+    AVG(ARRIVAL_DELAY) AS avg_arrival_delay 
+FROM flights_cleaned
+GROUP BY AIRLINE
+ORDER BY avg_arrival_delay ASC;
+
+#4 Find the top reasons for flight cancellations and their frequency.
+SELECT 
+    c.CANCELLATION_DESCRIPTION, 
+    COUNT(f.CANCELLATION_REASON) AS cancellation_count 
+FROM flights_cleaned f
+JOIN cancellation_codes_cleaned c 
+ON f.CANCELLATION_REASON = c.CANCELLATION_REASON
+WHERE f.CANCELLED = 1
+GROUP BY c.CANCELLATION_DESCRIPTION
+ORDER BY cancellation_count DESC;
+
+#5 Identify airports with the highest number of flight departures and arrivals.
+SELECT 
+    ORIGIN_AIRPORT AS airport, 
+    COUNT(*) AS total_departures 
+FROM flights_cleaned
+GROUP BY ORIGIN_AIRPORT
+ORDER BY total_departures DESC
+LIMIT 10;
+
+#0.5 Identify airports with the highest number of flight arrivals.
+SELECT 
+    DESTINATION_AIRPORT AS airport, 
+    COUNT(*) AS total_arrivals 
+FROM flights_cleaned
+GROUP BY DESTINATION_AIRPORT
+ORDER BY total_arrivals DESC
+LIMIT 10;
+
+#6 Analyze how weather impacts delays and cancellations.
+SELECT 
+    SUM(WEATHER_DELAY) AS total_weather_delay, 
+    COUNT(CASE WHEN CANCELLATION_REASON = 'B' THEN 1 END) AS total_weather_cancellations 
+FROM flights_cleaned;
+
+#7 Calculate the average flight duration for different distance ranges.
+SELECT 
+    CASE 
+        WHEN DISTANCE < 500 THEN 'Short (<500 miles)'
+        WHEN DISTANCE BETWEEN 500 AND 1500 THEN 'Medium (500-1500 miles)'
+        WHEN DISTANCE > 1500 THEN 'Long (>1500 miles)'
+    END AS distance_category,
+    AVG(AIR_TIME) AS avg_flight_duration
+FROM flights_cleaned
+GROUP BY distance_category;
+
+#8 Find which day of the week has the highest on-time flight performance.
+SELECT 
+    DAY_OF_WEEK, 
+    AVG(ARRIVAL_DELAY) AS avg_arrival_delay 
+FROM flights_cleaned
+GROUP BY DAY_OF_WEEK
+ORDER BY avg_arrival_delay ASC;
+
+#9 Identify which months have the highest number of flights and delays.
+SELECT 
+    MONTH, 
+    COUNT(*) AS total_flights, 
+    AVG(ARRIVAL_DELAY) AS avg_arrival_delay 
+FROM flights_cleaned
+GROUP BY MONTH
+ORDER BY total_flights DESC;
+
+#10 Identify which airports act as the largest hubs based on the number of connecting flights.
+SELECT 
+    ORIGIN_AIRPORT, 
+    COUNT(*) AS total_flights 
+FROM flights_cleaned
+GROUP BY ORIGIN_AIRPORT
+ORDER BY total_flights DESC
+LIMIT 10;
